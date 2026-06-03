@@ -184,6 +184,48 @@
   animation: pulse-ring 1.8s ease-out infinite;
 }
 
+/* Leaflet overrides */
+.leaflet-container {
+  background: #1a2e1b;
+  font-family: "Golos Text", sans-serif;
+}
+.leaflet-control-zoom {
+  border: none !important;
+  box-shadow: none !important;
+}
+.leaflet-control-zoom a {
+  background: rgba(20, 13, 6, 0.85) !important;
+  color: #ff7d0a !important;
+  border: 1px solid rgba(180, 117, 53, 0.3) !important;
+  backdrop-filter: blur(8px);
+  font-weight: bold;
+}
+.leaflet-control-zoom a:hover {
+  background: rgba(40, 25, 10, 0.95) !important;
+}
+.leaflet-control-attribution {
+  background: rgba(10, 8, 4, 0.7) !important;
+  color: rgba(200, 180, 150, 0.5) !important;
+  font-size: 9px !important;
+}
+.leaflet-control-attribution a {
+  color: rgba(200, 180, 150, 0.7) !important;
+}
+.park-tooltip {
+  background: rgba(10, 8, 4, 0.88) !important;
+  border: 1px solid rgba(180, 117, 53, 0.35) !important;
+  color: #f0e4cc !important;
+  font-family: "Oswald", sans-serif !important;
+  font-size: 11px !important;
+  letter-spacing: 0.03em;
+  border-radius: 6px !important;
+  padding: 3px 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+}
+.park-tooltip::before {
+  border-top-color: rgba(180, 117, 53, 0.3) !important;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar {
   width: 3px;

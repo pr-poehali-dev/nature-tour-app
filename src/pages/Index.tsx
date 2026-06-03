@@ -1,71 +1,12 @@
 import { useState } from "react";
 import Icon from "@/components/ui/icon";
+import ParkMap, { TRAILS_DATA, type Trail } from "@/components/ParkMap";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Tab = "map" | "compass" | "weather" | "guide" | "profile";
 type IconName = string;
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
-const TRAILS = [
-  {
-    id: 1,
-    name: "Большой Иремель",
-    color: "#ff7d0a",
-    difficulty: "medium",
-    difficultyLabel: "Средняя",
-    length: "14.2 км",
-    time: "6–8 часов",
-    elevation: "+780 м",
-    rating: 4.8,
-    reviews: 234,
-    description:
-      "Главный маршрут парка к вершине Большой Иремель (1582 м). Проходит через субальпийские луга и курумники. Незабываемые виды на Южный Урал.",
-    points: [
-      { icon: "Droplets", label: "Родник «Холодный»", color: "#7bb3d0" },
-      { icon: "Tent", label: "Стоянка «Еловая»", color: "#2d8b3f" },
-      { icon: "Shield", label: "Пост егерей", color: "#b47535" },
-    ],
-  },
-  {
-    id: 2,
-    name: "Малый Иремель",
-    color: "#2d8b3f",
-    difficulty: "easy",
-    difficultyLabel: "Лёгкая",
-    length: "9.5 км",
-    time: "4–5 часов",
-    elevation: "+560 м",
-    rating: 4.6,
-    reviews: 189,
-    description:
-      "Более короткий маршрут к вершине Малый Иремель (1449 м). Подходит для семей с детьми и начинающих туристов.",
-    points: [
-      { icon: "Droplets", label: "Родник «Лесной»", color: "#7bb3d0" },
-      { icon: "Shield", label: "Информационный щит", color: "#b47535" },
-    ],
-  },
-  {
-    id: 3,
-    name: "Тыгынский перевал",
-    color: "#e53e3e",
-    difficulty: "hard",
-    difficultyLabel: "Сложная",
-    length: "22.8 км",
-    time: "10–12 часов",
-    elevation: "+1050 м",
-    rating: 4.9,
-    reviews: 87,
-    description:
-      "Экспедиционный маршрут для опытных туристов через Тыгынский перевал. Требует физической подготовки и специального снаряжения.",
-    points: [
-      { icon: "Droplets", label: "Родник «Перевальный»", color: "#7bb3d0" },
-      { icon: "Tent", label: "Биваковая зона", color: "#2d8b3f" },
-      { icon: "Shield", label: "Контрольный пост", color: "#b47535" },
-      { icon: "Tent", label: "Стоянка «Вершинная»", color: "#2d8b3f" },
-    ],
-  },
-];
-
 const WEATHER_DAYS = [
   { day: "Сегодня", emoji: "☀️", temp: "+12°", night: "+4°", wind: "3 м/с", condition: "Ясно" },
   { day: "Чт", emoji: "⛅", temp: "+9°", night: "+2°", wind: "5 м/с", condition: "Облачно" },
@@ -118,94 +59,33 @@ const NOTES = [
 
 // ─── Map ───────────────────────────────────────────────────────────────────────
 function MapView() {
-  const [selectedTrail, setSelectedTrail] = useState<(typeof TRAILS)[0] | null>(null);
+  const [selectedTrail, setSelectedTrail] = useState<Trail | null>(null);
 
   return (
     <div className="flex flex-col h-full">
       <div className="relative flex-1 overflow-hidden">
-        {/* Map background */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background: "radial-gradient(ellipse at 30% 40%, rgba(45,139,63,0.28) 0%, transparent 60%), radial-gradient(ellipse at 70% 60%, rgba(180,117,53,0.15) 0%, transparent 50%), linear-gradient(180deg, #0d1f0e 0%, #1a2e1b 40%, #0e1a0f 100%)",
-          }}
-        >
-          {/* SVG terrain */}
-          <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 560" preserveAspectRatio="xMidYMid slice">
-            <defs>
-              <filter id="glow">
-                <feGaussianBlur stdDeviation="2" result="blur"/>
-                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-              </filter>
-            </defs>
-            {/* Contour lines — summit 1 */}
-            {[50, 100, 150, 200, 240].map((r, i) => (
-              <ellipse key={`c1-${i}`} cx="220" cy="160" rx={r} ry={r * 0.6} fill="none" stroke="#4da85e" strokeWidth="0.7" strokeDasharray="4,8" opacity={0.3 + i * 0.05} />
-            ))}
-            {/* Contour lines — summit 2 */}
-            {[35, 65, 95].map((r, i) => (
-              <ellipse key={`c2-${i}`} cx="120" cy="320" rx={r} ry={r * 0.7} fill="none" stroke="#4da85e" strokeWidth="0.7" strokeDasharray="4,8" opacity="0.25" />
-            ))}
-            {/* Trail 1 — orange */}
-            <path d="M 60 500 Q 100 450 140 380 Q 180 300 200 240 Q 210 200 220 160" stroke="#ff7d0a" strokeWidth="3" fill="none" strokeLinecap="round" filter="url(#glow)" />
-            {/* Trail 2 — green */}
-            <path d="M 80 510 Q 95 470 108 420 Q 115 370 120 320" stroke="#2d8b3f" strokeWidth="3" fill="none" strokeLinecap="round" filter="url(#glow)" />
-            {/* Trail 3 — red */}
-            <path d="M 40 520 Q 80 470 130 410 Q 180 350 230 280 Q 270 230 300 190 Q 340 155 360 120" stroke="#e53e3e" strokeWidth="3" fill="none" strokeLinecap="round" filter="url(#glow)" />
-            {/* River */}
-            <path d="M 310 40 Q 270 100 230 160 Q 190 220 150 300" stroke="#7bb3d0" strokeWidth="1.5" fill="none" strokeDasharray="5,4" opacity="0.5" />
-            {/* Forest dots */}
-            {[[60,200],[90,240],[70,280],[150,200],[170,250],[200,300],[250,200],[280,160]].map(([x,y],i) => (
-              <circle key={i} cx={x} cy={y} r="3" fill="#2d8b3f" opacity="0.4" />
-            ))}
-          </svg>
+        {/* Real Leaflet map */}
+        <ParkMap
+          onTrailSelect={setSelectedTrail}
+          selectedTrailId={selectedTrail?.id ?? null}
+        />
 
-          {/* Peak markers */}
-          <button onClick={() => setSelectedTrail(TRAILS[0])} className="absolute flex flex-col items-center gap-0.5 hover:scale-110 transition-transform" style={{ left: "52%", top: "25%" }}>
-            <div className="w-7 h-7 rounded-full bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/40" style={{ fontSize: 14 }}>▲</div>
-            <span className="text-[9px] text-amber-300 font-display whitespace-nowrap bg-black/40 px-1 rounded">Бол. Иремель 1582м</span>
-          </button>
-
-          <button onClick={() => setSelectedTrail(TRAILS[1])} className="absolute flex flex-col items-center gap-0.5 hover:scale-110 transition-transform" style={{ left: "24%", top: "53%" }}>
-            <div className="w-6 h-6 rounded-full bg-green-600 flex items-center justify-center shadow-lg shadow-green-700/40" style={{ fontSize: 12 }}>▲</div>
-            <span className="text-[9px] text-green-400 font-display whitespace-nowrap bg-black/40 px-1 rounded">Мал. Иремель 1449м</span>
-          </button>
-
-          {/* POI icons */}
-          <div className="absolute flex items-center justify-center w-6 h-6 rounded-full bg-blue-500/20 border border-blue-400/50" style={{ left: "37%", top: "44%" }}>
-            <span className="text-xs">💧</span>
-          </div>
-          <div className="absolute flex items-center justify-center w-6 h-6 rounded-full bg-green-700/20 border border-green-500/50" style={{ left: "29%", top: "50%" }}>
-            <span className="text-xs">⛺</span>
-          </div>
-          <div className="absolute flex items-center justify-center w-6 h-6 rounded-full bg-amber-700/20 border border-amber-500/50" style={{ left: "60%", top: "65%" }}>
-            <span className="text-xs">🛡️</span>
-          </div>
-
-          {/* User location */}
-          <div className="absolute" style={{ left: "calc(46% - 8px)", top: "calc(60% - 8px)" }}>
-            <div className="relative">
-              <div className="absolute -inset-3 rounded-full bg-amber-500/25 pulse-ring" />
-              <div className="w-4 h-4 rounded-full bg-amber-500 border-2 border-white shadow-lg shadow-amber-500/60" />
-            </div>
-          </div>
-        </div>
-
-        {/* Map header */}
-        <div className="absolute top-0 inset-x-0 p-3 flex items-center justify-between">
+        {/* Map header overlay */}
+        <div className="absolute top-0 inset-x-0 p-3 flex items-center justify-between pointer-events-none z-[1000]">
           <div className="glass-card rounded-xl px-3 py-1.5 flex items-center gap-2">
             <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-            <span className="text-[10px] text-foreground/70">54.521°N · 58.847°E</span>
+            <span className="text-[10px] text-foreground/70">54.502°N · 58.845°E</span>
           </div>
           <div className="glass-card rounded-xl px-3 py-1.5">
             <span className="text-[10px] text-amber-400 font-display">1247 м</span>
           </div>
         </div>
 
-        {/* Legend */}
-        <div className="absolute bottom-3 right-3 glass-card rounded-xl p-2.5 flex flex-col gap-1.5">
-          {TRAILS.map((t) => (
-            <button key={t.id} onClick={() => setSelectedTrail(t)} className="flex items-center gap-2 hover:opacity-70 transition-opacity">
+        {/* Legend overlay */}
+        <div className="absolute bottom-3 left-3 glass-card rounded-xl p-2.5 flex flex-col gap-1.5 z-[1000]">
+          {TRAILS_DATA.map((t) => (
+            <button key={t.id} onClick={() => setSelectedTrail(t === selectedTrail ? null : t)}
+              className="flex items-center gap-2 hover:opacity-70 transition-opacity">
               <div className="w-5 h-1.5 rounded-full" style={{ background: t.color }} />
               <span className="text-[10px] text-foreground/75">{t.name}</span>
             </button>
