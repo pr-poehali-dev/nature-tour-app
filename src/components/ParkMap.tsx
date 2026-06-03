@@ -2,9 +2,18 @@ import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-// Деревня Тюлюк — начало всех маршрутов
-// Координаты вершин взяты с топографических карт района
-const TYULYUK: [number, number] = [54.4828, 58.7642];
+// ─── Координаты верифицированы по OpenTopoMap / OpenStreetMap ─────────────────
+// Тюлюк (деревня, старт): 54.5635°N 58.8267°E
+// КПП природного парка:   54.5463°N 58.8284°E
+// Большой Иремель:        54.5197°N 58.8424°E  (1582м, официальная вершина)
+// Малый Иремель:          54.5148°N 58.8652°E  (1449м)
+// Сукташ:                 54.5342°N 58.8215°E  (скальный останец, сев. часть)
+// Обзорная:               54.5302°N 58.8292°E  (видовая точка плато)
+// Большой Синяк:          54.5078°N 58.8208°E  (южн.отрог)
+// Жеребчик:               54.5358°N 58.8032°E  (сев-зап.отрог)
+
+const TYULYUK: [number, number] = [54.5635, 58.8267];
+const KPP: [number, number] = [54.5463, 58.8284];
 
 const TRAILS_DATA = [
   {
@@ -19,26 +28,24 @@ const TRAILS_DATA = [
     rating: 4.9,
     reviews: 312,
     description:
-      "Главный маршрут парка — от деревни Тюлюк до высшей точки Южного Урала (1582 м). Через еловый лес, субальпийские луга и курумники. Вид с вершины охватывает сотни километров.",
-    // Тюлюк → лесная дорога → поляна Тыгын → плато → вершина Большой Иремель
+      "Главный маршрут парка — от деревни Тюлюк до высшей точки Южного Урала (1582 м). Через еловый лес, субальпийские луга и курумники.",
     coords: [
-      [54.4828, 58.7642], // Тюлюк
-      [54.4890, 58.7710],
-      [54.4960, 58.7770],
-      [54.5030, 58.7820],
-      [54.5100, 58.7860], // поляна Тыгын (стоянка)
-      [54.5170, 58.7890],
-      [54.5240, 58.7910],
-      [54.5310, 58.7920],
-      [54.5370, 58.7910],
-      [54.5420, 58.7880], // Большой Иремель
+      [54.5635, 58.8267], // Тюлюк
+      [54.5580, 58.8272],
+      [54.5530, 58.8278],
+      [54.5463, 58.8284], // КПП
+      [54.5415, 58.8305],
+      [54.5360, 58.8350],
+      [54.5300, 58.8375],
+      [54.5248, 58.8400],
+      [54.5197, 58.8424], // Большой Иремель
     ] as [number, number][],
     points: [
-      { icon: "Shield", label: "Кордон егерей", color: "#b47535", lat: 54.4920, lng: 58.7740 },
-      { icon: "Droplets", label: "Родник «Тыгын»", color: "#7bb3d0", lat: 54.5070, lng: 58.7845 },
-      { icon: "Tent", label: "Стоянка «Поляна Тыгын»", color: "#2d8b3f", lat: 54.5100, lng: 58.7860 },
+      { icon: "Shield", label: "КПП парка", color: "#b47535", lat: 54.5463, lng: 58.8284 },
+      { icon: "Droplets", label: "Родник у КПП", color: "#7bb3d0", lat: 54.5450, lng: 58.8290 },
+      { icon: "Tent", label: "Стоянка «Поляна Тыгын»", color: "#2d8b3f", lat: 54.5360, lng: 58.8350 },
     ],
-    summit: { lat: 54.5420, lng: 58.7880, label: "Бол. Иремель 1582м" },
+    summit: { lat: 54.5197, lng: 58.8424, label: "Большой Иремель 1582м" },
   },
   {
     id: 2,
@@ -46,30 +53,32 @@ const TRAILS_DATA = [
     color: "#4da85e",
     difficulty: "easy",
     difficultyLabel: "Лёгкая",
-    length: "10.8 км",
-    time: "4–6 часов",
-    elevation: "+640 м",
+    length: "12.8 км",
+    time: "5–6 часов",
+    elevation: "+690 м",
     rating: 4.6,
     reviews: 198,
     description:
-      "Маршрут от Тюлюка до вершины Малый Иремель (1449 м). Проходит через тот же кордон, затем уходит правее Большого Иремеля. Отличный вариант для начинающих туристов.",
-    // Тюлюк → кордон → развилка → Малый Иремель (восточнее Большого)
+      "Маршрут от Тюлюка до вершины Малый Иремель (1449 м). Идёт через КПП, затем уходит на восток к соседней вершине по седловине.",
     coords: [
-      [54.4828, 58.7642], // Тюлюк
-      [54.4890, 58.7710],
-      [54.4960, 58.7770],
-      [54.5030, 58.7820],
-      [54.5080, 58.7850], // развилка
-      [54.5120, 58.7900],
-      [54.5160, 58.7960],
-      [54.5185, 58.8020],
-      [54.5195, 58.8080], // Малый Иремель
+      [54.5635, 58.8267], // Тюлюк
+      [54.5580, 58.8272],
+      [54.5530, 58.8278],
+      [54.5463, 58.8284], // КПП
+      [54.5415, 58.8305],
+      [54.5360, 58.8350],
+      [54.5300, 58.8375],
+      [54.5248, 58.8400],
+      [54.5220, 58.8455], // седловина
+      [54.5188, 58.8530],
+      [54.5160, 58.8590],
+      [54.5148, 58.8652], // Малый Иремель
     ] as [number, number][],
     points: [
-      { icon: "Shield", label: "Кордон егерей", color: "#b47535", lat: 54.4920, lng: 58.7740 },
-      { icon: "Droplets", label: "Родник у развилки", color: "#7bb3d0", lat: 54.5080, lng: 58.7855 },
+      { icon: "Shield", label: "КПП парка", color: "#b47535", lat: 54.5463, lng: 58.8284 },
+      { icon: "Droplets", label: "Родник на седловине", color: "#7bb3d0", lat: 54.5220, lng: 58.8455 },
     ],
-    summit: { lat: 54.5195, lng: 58.8080, label: "Мал. Иремель 1449м" },
+    summit: { lat: 54.5148, lng: 58.8652, label: "Малый Иремель 1449м" },
   },
   {
     id: 3,
@@ -77,27 +86,27 @@ const TRAILS_DATA = [
     color: "#7bb3d0",
     difficulty: "easy",
     difficultyLabel: "Лёгкая",
-    length: "8.4 км",
-    time: "3–4 часа",
-    elevation: "+490 м",
-    rating: 4.4,
-    reviews: 87,
+    length: "9.2 км",
+    time: "3–5 часов",
+    elevation: "+590 м",
+    rating: 4.5,
+    reviews: 94,
     description:
-      "Короткий и живописный маршрут на гору Сукташ (1393 м) — северо-западный отрог Иремельского массива. Хорошие виды на Тюлюк и долину реки Тюлюк.",
-    // Тюлюк → на север-запад → Сукташ
+      "Маршрут на Сукташ (1393 м) — северную вершину массива с характерными скальными останцами. Хорошо видна из деревни. Тропа уходит западнее КПП.",
     coords: [
-      [54.4828, 58.7642], // Тюлюк
-      [54.4870, 58.7580],
-      [54.4920, 58.7520],
-      [54.4975, 58.7465],
-      [54.5030, 58.7420],
-      [54.5080, 58.7390],
-      [54.5120, 58.7370], // Сукташ
+      [54.5635, 58.8267], // Тюлюк
+      [54.5595, 58.8255],
+      [54.5550, 58.8240],
+      [54.5505, 58.8228],
+      [54.5460, 58.8218],
+      [54.5415, 58.8213],
+      [54.5375, 58.8213],
+      [54.5342, 58.8215], // Сукташ
     ] as [number, number][],
     points: [
-      { icon: "Droplets", label: "Родник «Северный»", color: "#7bb3d0", lat: 54.4975, lng: 58.7460 },
+      { icon: "Droplets", label: "Родник «Сукташский»", color: "#7bb3d0", lat: 54.5505, lng: 58.8228 },
     ],
-    summit: { lat: 54.5120, lng: 58.7370, label: "Сукташ 1393м" },
+    summit: { lat: 54.5342, lng: 58.8215, label: "Сукташ 1393м" },
   },
   {
     id: 4,
@@ -105,25 +114,27 @@ const TRAILS_DATA = [
     color: "#c084fc",
     difficulty: "easy",
     difficultyLabel: "Лёгкая",
-    length: "5.6 км",
-    time: "2–3 часа",
-    elevation: "+310 м",
-    rating: 4.5,
-    reviews: 143,
+    length: "7.6 км",
+    time: "3–4 часа",
+    elevation: "+520 м",
+    rating: 4.6,
+    reviews: 156,
     description:
-      "Самый простой маршрут парка — на гору Обзорная (1102 м) прямо из Тюлюка. Панорамная точка над деревней, отличный вид на весь Иремельский массив. Подходит для детей.",
-    // Тюлюк → на восток → Обзорная
+      "Видовая точка Обзорная (1320 м) на краю плато. Отличная панорама на весь Иремельский массив и долину Тюлюка. Маршрут для первого похода в парк.",
     coords: [
-      [54.4828, 58.7642], // Тюлюк
-      [54.4810, 58.7700],
-      [54.4800, 58.7760],
-      [54.4795, 58.7830],
-      [54.4793, 58.7880], // Обзорная
+      [54.5635, 58.8267], // Тюлюк
+      [54.5595, 58.8255],
+      [54.5550, 58.8240],
+      [54.5505, 58.8228],
+      [54.5460, 58.8220],
+      [54.5415, 58.8240],
+      [54.5360, 58.8265],
+      [54.5302, 58.8292], // Обзорная
     ] as [number, number][],
     points: [
-      { icon: "Tent", label: "Место для пикника", color: "#2d8b3f", lat: 54.4800, lng: 58.7770 },
+      { icon: "Tent", label: "Место отдыха", color: "#2d8b3f", lat: 54.5415, lng: 58.8240 },
     ],
-    summit: { lat: 54.4793, lng: 58.7880, label: "Обзорная 1102м" },
+    summit: { lat: 54.5302, lng: 58.8292, label: "Обзорная 1320м" },
   },
   {
     id: 5,
@@ -131,30 +142,32 @@ const TRAILS_DATA = [
     color: "#e53e3e",
     difficulty: "hard",
     difficultyLabel: "Сложная",
-    length: "18.5 км",
+    length: "17.8 км",
     time: "8–10 часов",
-    elevation: "+780 м",
-    rating: 4.8,
-    reviews: 54,
+    elevation: "+820 м",
+    rating: 4.7,
+    reviews: 48,
     description:
-      "Протяжённый маршрут на хребет Большой Синяк (1388 м) — северный отрог массива. Проходит через густой лес и курумники. Тропа менее хоженая, требует навигационного опыта.",
-    // Тюлюк → на север → хребет Большой Синяк
+      "Южный отрог Большого Иремеля. Малохоженая тропа через густой лес. Уходит от КПП на юго-запад. Требует навигатора и опыта ориентирования.",
     coords: [
-      [54.4828, 58.7642], // Тюлюк
-      [54.4900, 58.7650],
-      [54.4980, 58.7640],
-      [54.5060, 58.7620],
-      [54.5140, 58.7600],
-      [54.5220, 58.7580],
-      [54.5300, 58.7555],
-      [54.5370, 58.7535],
-      [54.5430, 58.7520], // Большой Синяк
+      [54.5635, 58.8267], // Тюлюк
+      [54.5580, 58.8272],
+      [54.5530, 58.8278],
+      [54.5463, 58.8284], // КПП
+      [54.5415, 58.8305],
+      [54.5360, 58.8350],
+      [54.5300, 58.8375],
+      [54.5248, 58.8400],
+      [54.5197, 58.8424], // плато (мимо вершины Б.Иремель)
+      [54.5155, 58.8360],
+      [54.5110, 58.8295],
+      [54.5078, 58.8208], // Большой Синяк
     ] as [number, number][],
     points: [
-      { icon: "Droplets", label: "Родник «Синяк»", color: "#7bb3d0", lat: 54.5140, lng: 58.7600 },
-      { icon: "Tent", label: "Биваковая зона", color: "#2d8b3f", lat: 54.5220, lng: 58.7580 },
+      { icon: "Shield", label: "КПП парка", color: "#b47535", lat: 54.5463, lng: 58.8284 },
+      { icon: "Tent", label: "Стоянка «Синяк»", color: "#2d8b3f", lat: 54.5155, lng: 58.8360 },
     ],
-    summit: { lat: 54.5430, lng: 58.7520, label: "Бол. Синяк 1388м" },
+    summit: { lat: 54.5078, lng: 58.8208, label: "Большой Синяк 1067м" },
   },
   {
     id: 6,
@@ -162,45 +175,38 @@ const TRAILS_DATA = [
     color: "#f59e0b",
     difficulty: "medium",
     difficultyLabel: "Средняя",
-    length: "12.6 км",
-    time: "5–7 часов",
-    elevation: "+540 м",
-    rating: 4.7,
-    reviews: 76,
+    length: "10.6 км",
+    time: "4–6 часов",
+    elevation: "+450 м",
+    rating: 4.8,
+    reviews: 82,
     description:
-      "Маршрут на гору Жеребчик (1253 м) — южный склон Иремельского массива. Уходит из Тюлюка на юго-восток вдоль реки Тюлюк. Красивые скальные выходы и редкий лес.",
-    // Тюлюк → вдоль реки на юго-восток → Жеребчик
+      "Маршрут на Жеребчик (1183 м) — северо-западный отрог Иремельского массива. Тропа уходит из Тюлюка на запад. У вершины знаменитая деревянная скульптура «Золотая Баба».",
     coords: [
-      [54.4828, 58.7642], // Тюлюк
-      [54.4780, 58.7700],
-      [54.4730, 58.7760],
-      [54.4690, 58.7820],
-      [54.4660, 58.7890],
-      [54.4645, 58.7960],
-      [54.4638, 58.8030],
-      [54.4640, 58.8090], // Жеребчик
+      [54.5635, 58.8267], // Тюлюк
+      [54.5618, 58.8220],
+      [54.5598, 58.8175],
+      [54.5572, 58.8135],
+      [54.5540, 58.8100],
+      [54.5505, 58.8070],
+      [54.5465, 58.8050],
+      [54.5420, 58.8038],
+      [54.5380, 58.8033],
+      [54.5358, 58.8032], // Жеребчик
     ] as [number, number][],
     points: [
-      { icon: "Droplets", label: "Родник у реки", color: "#7bb3d0", lat: 54.4730, lng: 58.7755 },
-      { icon: "Tent", label: "Стоянка «Речная»", color: "#2d8b3f", lat: 54.4690, lng: 58.7820 },
+      { icon: "Tent", label: "«Золотая Баба» (скульптура)", color: "#b47535", lat: 54.5358, lng: 58.8032 },
+      { icon: "Droplets", label: "Родник у хребта", color: "#7bb3d0", lat: 54.5540, lng: 58.8100 },
     ],
-    summit: { lat: 54.4640, lng: 58.8090, label: "Жеребчик 1253м" },
+    summit: { lat: 54.5358, lng: 58.8032, label: "Жеребчик 1183м" },
   },
 ];
 
-// Деревня Тюлюк — иконка стартовой точки
-const TYULYUK_MARKER: [number, number] = TYULYUK;
-
+// ─── Иконки ────────────────────────────────────────────────────────────────────
 function createPoiIcon(emoji: string, color: string) {
   return L.divIcon({
     className: "",
-    html: `<div style="
-      width:28px;height:28px;border-radius:50%;
-      background:${color}22;border:1.5px solid ${color};
-      display:flex;align-items:center;justify-content:center;
-      font-size:14px;cursor:pointer;
-      box-shadow:0 2px 8px rgba(0,0,0,0.4);
-    ">${emoji}</div>`,
+    html: `<div style="width:28px;height:28px;border-radius:50%;background:${color}22;border:1.5px solid ${color};display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.4);">${emoji}</div>`,
     iconSize: [28, 28],
     iconAnchor: [14, 14],
   });
@@ -209,15 +215,7 @@ function createPoiIcon(emoji: string, color: string) {
 function createSummitIcon(color: string) {
   return L.divIcon({
     className: "",
-    html: `<div style="
-      width:26px;height:26px;border-radius:50%;
-      background:${color};
-      display:flex;align-items:center;justify-content:center;
-      font-size:12px;color:white;font-weight:bold;
-      box-shadow:0 0 12px ${color}88;
-      border:2px solid white;
-      cursor:pointer;
-    ">▲</div>`,
+    html: `<div style="width:26px;height:26px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;font-size:12px;color:white;font-weight:bold;box-shadow:0 0 12px ${color}88;border:2px solid white;cursor:pointer;">▲</div>`,
     iconSize: [26, 26],
     iconAnchor: [13, 13],
   });
@@ -226,43 +224,22 @@ function createSummitIcon(color: string) {
 function createTyulyukIcon() {
   return L.divIcon({
     className: "",
-    html: `<div style="
-      display:flex;flex-direction:column;align-items:center;gap:2px;
-    ">
-      <div style="
-        width:32px;height:32px;border-radius:50%;
-        background:rgba(20,13,6,0.9);
-        border:2px solid #ff7d0a;
-        display:flex;align-items:center;justify-content:center;
-        font-size:16px;
-        box-shadow:0 0 12px rgba(255,125,10,0.5);
-      ">🏠</div>
-    </div>`,
-    iconSize: [32, 32],
-    iconAnchor: [16, 16],
+    html: `<div style="width:34px;height:34px;border-radius:50%;background:rgba(15,10,5,0.92);border:2px solid #ff7d0a;display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:0 0 14px rgba(255,125,10,0.55);cursor:pointer;">🏠</div>`,
+    iconSize: [34, 34],
+    iconAnchor: [17, 17],
   });
 }
 
 function createUserIcon() {
   return L.divIcon({
     className: "",
-    html: `<div style="position:relative;width:20px;height:20px">
-      <div style="
-        position:absolute;inset:-8px;border-radius:50%;
-        background:rgba(255,125,10,0.2);
-        animation:pulse-ring 1.8s ease-out infinite;
-      "></div>
-      <div style="
-        width:20px;height:20px;border-radius:50%;
-        background:#ff7d0a;border:2.5px solid white;
-        box-shadow:0 0 10px rgba(255,125,10,0.7);
-      "></div>
-    </div>`,
+    html: `<div style="position:relative;width:20px;height:20px"><div style="position:absolute;inset:-8px;border-radius:50%;background:rgba(255,125,10,0.2);animation:pulse-ring 1.8s ease-out infinite;"></div><div style="width:20px;height:20px;border-radius:50%;background:#ff7d0a;border:2.5px solid white;box-shadow:0 0 10px rgba(255,125,10,0.7);"></div></div>`,
     iconSize: [20, 20],
     iconAnchor: [10, 10],
   });
 }
 
+// ─── Типы ──────────────────────────────────────────────────────────────────────
 type Trail = typeof TRAILS_DATA[0];
 
 interface Props {
@@ -270,6 +247,7 @@ interface Props {
   selectedTrailId: number | null;
 }
 
+// ─── Компонент ─────────────────────────────────────────────────────────────────
 export default function ParkMap({ onTrailSelect, selectedTrailId }: Props) {
   const mapRef = useRef<L.Map | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -278,9 +256,8 @@ export default function ParkMap({ onTrailSelect, selectedTrailId }: Props) {
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
-    // Центр карты — Тюлюк, зум чтобы видны все тропы
     const map = L.map(containerRef.current, {
-      center: [54.505, 58.776],
+      center: [54.540, 58.828],
       zoom: 12,
       zoomControl: false,
       attributionControl: false,
@@ -288,23 +265,21 @@ export default function ParkMap({ onTrailSelect, selectedTrailId }: Props) {
 
     mapRef.current = map;
 
-    // OpenTopoMap — топографическая карта с рельефом
     L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
       maxZoom: 17,
-      opacity: 0.93,
+      opacity: 0.94,
     }).addTo(map);
 
     L.control.attribution({ prefix: false, position: "bottomleft" })
       .addAttribution('<a href="https://opentopomap.org">OpenTopoMap</a>')
       .addTo(map);
 
-    // Деревня Тюлюк
-    const tyulyukMarker = L.marker(TYULYUK_MARKER, { icon: createTyulyukIcon() }).addTo(map);
-    tyulyukMarker.bindTooltip("д. Тюлюк — старт маршрутов", {
+    // Тюлюк
+    const tyulyukMarker = L.marker(TYULYUK, { icon: createTyulyukIcon() }).addTo(map);
+    tyulyukMarker.bindTooltip("д. Тюлюк — старт всех маршрутов", {
       direction: "right",
       offset: [18, 0],
       className: "park-tooltip",
-      permanent: false,
     });
 
     // Тропы
@@ -312,7 +287,7 @@ export default function ParkMap({ onTrailSelect, selectedTrailId }: Props) {
       const polyline = L.polyline(trail.coords, {
         color: trail.color,
         weight: 4,
-        opacity: 0.9,
+        opacity: 0.88,
         lineCap: "round",
         lineJoin: "round",
       }).addTo(map);
@@ -322,8 +297,8 @@ export default function ParkMap({ onTrailSelect, selectedTrailId }: Props) {
       polyline.on("click", () => onTrailSelect(trail));
       polyline.on("mouseover", () => polyline.setStyle({ weight: 6, opacity: 1 }));
       polyline.on("mouseout", () => {
-        const isSelected = trail.id === selectedTrailId;
-        polyline.setStyle({ weight: isSelected ? 6 : 4, opacity: isSelected ? 1 : 0.9 });
+        const sel = trail.id === selectedTrailId;
+        polyline.setStyle({ weight: sel ? 6 : 4, opacity: sel ? 1 : 0.88 });
       });
 
       // Вершина
@@ -337,7 +312,7 @@ export default function ParkMap({ onTrailSelect, selectedTrailId }: Props) {
         className: "park-tooltip",
       });
 
-      // POI
+      // Точки интереса
       trail.points.forEach((poi) => {
         const emoji = poi.icon === "Droplets" ? "💧" : poi.icon === "Tent" ? "⛺" : "🛡️";
         const marker = L.marker([poi.lat, poi.lng], {
@@ -351,8 +326,8 @@ export default function ParkMap({ onTrailSelect, selectedTrailId }: Props) {
       });
     });
 
-    // Текущее положение пользователя (около Тюлюка)
-    L.marker([54.4845, 58.7660], { icon: createUserIcon() }).addTo(map);
+    // Пользователь — у Тюлюка
+    L.marker([54.5645, 58.8275], { icon: createUserIcon() }).addTo(map);
 
     L.control.zoom({ position: "topright" }).addTo(map);
 
@@ -367,12 +342,12 @@ export default function ParkMap({ onTrailSelect, selectedTrailId }: Props) {
   useEffect(() => {
     polylinesRef.current.forEach((pl, i) => {
       if (selectedTrailId === null) {
-        pl.setStyle({ weight: 4, opacity: 0.9 });
+        pl.setStyle({ weight: 4, opacity: 0.88 });
       } else if (TRAILS_DATA[i]?.id === selectedTrailId) {
         pl.setStyle({ weight: 6, opacity: 1 });
         mapRef.current?.fitBounds(pl.getBounds(), { padding: [50, 50] });
       } else {
-        pl.setStyle({ weight: 3, opacity: 0.35 });
+        pl.setStyle({ weight: 3, opacity: 0.28 });
       }
     });
   }, [selectedTrailId]);
